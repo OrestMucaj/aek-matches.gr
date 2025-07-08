@@ -11,22 +11,47 @@
       background-repeat: no-repeat;
       background-attachment: fixed;
       margin: 0;
-      padding: 20px;
+      padding: 0;
       color: #333;
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding-top: 40px;
-      backdrop-filter: blur(2px);
       background-color: rgba(0, 0, 0, 0.3);
     }
+    
+    /* --- Header Styles --- */
+    .header {
+        position: relative;
+        z-index: 10;
+    }
 
-    h1 {
-        color: white;
-        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
-        margin-bottom: 20px;
+    .top-bar {
+        background-color: #000;
+        height: 60px;
+    }
+
+    .yellow-bar {
+        background-color: #FEE12B;
+        height: 40px;
+    }
+    
+    .emblem-container {
+        position: absolute;
+        top: 5px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 20;
+    }
+    
+    .emblem {
+        height: 90px;
+    }
+
+    /* --- Page Content Wrapper --- */
+    .content-wrapper {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 40px 20px 20px 20px;
+        backdrop-filter: blur(2px);
     }
     
     .filter-container {
@@ -72,7 +97,6 @@
         background-color: rgba(255, 255, 153, 0.85);
     }
     
-    /* --- New Group Highlighting Styles --- */
     .highlight-group td:first-child {
         border-left: 2px solid red;
     }
@@ -88,31 +112,41 @@
   </style>
 </head>
 <body>
-  <h1>AEK Matches</h1>
 
-  <div class="filter-container">
-    <select id="sportFilter">
-      <option value="all">ΟΛΑ ΤΑ ΑΘΛΗΜΑΤΑ</option>
-      <option value="current-week">ΤΩΡΙΝΗ ΕΒΔΟΜΑΔΑ</option>
-    </select>
+  <header class="header">
+    <div class="top-bar"></div>
+    <div class="yellow-bar"></div>
+    <div class="emblem-container">
+      <img src="aek-erasitexnikh-logo.png" alt="AEK Emblem" class="emblem">
+    </div>
+  </header>
+  
+  <div class="content-wrapper">
+      <div class="filter-container">
+        <select id="sportFilter">
+          <option value="all">ΟΛΑ ΤΑ ΑΘΛΗΜΑΤΑ</option>
+          <option value="current-week">ΤΩΡΙΝΗ ΕΒΔΟΜΑΔΑ</option>
+        </select>
+      </div>
+    
+      <table>
+        <thead>
+          <tr>
+            <th>ΗΜΕΡΑ</th>
+            <th>ΗΜΕΡΟΜΗΝΙΑ</th>
+            <th>ΩΡΑ</th>
+            <th>ΑΓΩΝΑΣ</th>
+            <th>ΓΗΠΕΔΟ</th>
+            <th>ΧΩΡΑ</th>
+            <th>ΑΘΛΗΜΑ</th>
+            <th>ΣΧΟΛΙΑ</th>
+          </tr>
+        </thead>
+        <tbody id="matchTableBody">
+          </tbody>
+      </table>
   </div>
 
-  <table>
-    <thead>
-      <tr>
-        <th>ΗΜΕΡΑ</th>
-        <th>ΗΜΕΡΟΜΗΝΙΑ</th>
-        <th>ΩΡΑ</th>
-        <th>ΑΓΩΝΑΣ</th>
-        <th>ΓΗΠΕΔΟ</th>
-        <th>ΧΩΡΑ</th>
-        <th>ΑΘΛΗΜΑ</th>
-        <th>ΣΧΟΛΙΑ</th>
-      </tr>
-    </thead>
-    <tbody id="matchTableBody">
-      </tbody>
-  </table>
 
   <script>
     const tableBody = document.getElementById('matchTableBody');
@@ -122,11 +156,12 @@
     async function loadMatches() {
       try {
         tableBody.innerHTML = '<tr><td colspan="8">Φόρτωση αγώνων...</td></tr>';
-        const response = await fetch("https://v1.nocodeapi.com/tsaiofficial/google_sheets/vRiFurXRMrXtxOzu?tabId=Matches");
+        const response = await fetch("https://script.google.com/macros/s/AKfycbzmxa3UHMRSutvUFyy3nAzqnPwsUhK_InCUaB42ezH_Hz0LDQigexilJtm1u3aD4jE7ow/exec");
         const data = await response.json();
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+        
         const upcomingMatches = data.data.filter(row => {
             return parseDateTime(row.ΗΜΕΡΟΜΗΝΙΑ, row.ΩΡΑ) >= today;
         });
@@ -177,11 +212,10 @@
         }
 
         if (filteredMatches.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="8">No matches found for this selection.</td></tr>';
+            tableBody.innerHTML = '<tr><td colspan="8">Δεν βρέθηκαν ματς για αυτή την επιλογή.</td></tr>';
             return;
         }
         
-        // --- Updated Highlighting Logic ---
         const weeklyMatchIndices = [];
         filteredMatches.forEach((row, index) => {
             const matchDate = parseDateTime(row.ΗΜΕΡΟΜΗΝΙΑ, row.ΩΡΑ);
@@ -203,36 +237,46 @@
               }
           }
 
-          tr.innerHTML = `
-            <td>${row.ΗΜΕΡΑ || ''}</td>
-            <td>${row.ΗΜΕΡΟΜΗΝΙΑ || ''}</td>
-            <td>${row.ΩΡΑ || ''}</td>
-            <td>${row.ΑΓΩΝΑΣ || ''}</td>
-            <td>${row.ΓΗΠΕΔΟ || ''}</td>
-            <td>${row.ΧΩΡΑ || ''}</td>
-            <td>${row.ΑΘΛΗΜΑ || ''}</td>
-            <td>${row.ΣΧΟΛΙΑ || ''}</td>
-          `;
+          const columnOrder = ['ΗΜΕΡΑ', 'ΗΜΕΡΟΜΗΝΙΑ', 'ΩΡΑ', 'ΑΓΩΝΑΣ', 'ΓΗΠΕΔΟ', 'ΧΩΡΑ', 'ΑΘΛΗΜΑ', 'ΣΧΟΛΙΑ'];
+          columnOrder.forEach(column => {
+              const td = document.createElement('td');
+              
+              let text = row[column] || '';
+              if ((column === 'ΗΜΕΡΟΜΗΝΙΑ' || column === 'ΩΡΑ') && row['ΗΜΕΡΟΜΗΝΙΑ']) {
+                  const d = parseDateTime(row['ΗΜΕΡΟΜΗΝΙΑ'], row['ΩΡΑ']);
+                  if(column === 'ΗΜΕΡΟΜΗΝΙΑ') {
+                      text = d.toLocaleDateString('el-GR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+                  } else if (column === 'ΩΡΑ' && String(row['ΩΡΑ']).toUpperCase() !== 'ΕΚΚΡΕΜΕΙ') {
+                      text = d.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', hour12: false });
+                  }
+              }
+              
+              td.textContent = text;
+
+              if (String(text).toUpperCase().includes('ΕΚΚΡΕΜΕΙ')) {
+                  td.innerHTML = String(text).replace(/ΕΚΚΡΕΜΕΙ/gi, '<span style="color: red;">$&</span>');
+              }
+              
+              tr.appendChild(td);
+          });
+          
           tableBody.appendChild(tr);
         });
     }
 
-    function parseDateTime(dateStr, timeStr) {
-      if (!dateStr || dateStr.split('/').length !== 3) return new Date(0);
+    function parseDateTime(dateISO, timeISO) {
+      if (!dateISO) return new Date(0);
       
-      const dateParts = dateStr.split('/');
-      const year = 2000 + parseInt(dateParts[2], 10);
-      const month = parseInt(dateParts[1], 10) - 1;
-      const day = parseInt(dateParts[0], 10);
+      const d = new Date(dateISO);
       
-      let hours = 0, minutes = 0;
-      if (timeStr && timeStr.includes(':')) {
-          const timeParts = timeStr.split(':');
-          hours = parseInt(timeParts[0], 10);
-          minutes = parseInt(timeParts[1], 10);
+      if (timeISO && !isNaN(new Date(timeISO).getTime())) {
+        const t = new Date(timeISO);
+        d.setHours(t.getHours());
+        d.setMinutes(t.getMinutes());
+        d.setSeconds(t.getSeconds());
       }
-
-      return new Date(year, month, day, hours, minutes);
+      
+      return d;
     }
     
     function getWeekBounds(date) {
