@@ -2,6 +2,7 @@
 <html lang="el">
 <head>
   <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>AEK Matches</title>
   <style>
     body {
@@ -15,6 +16,7 @@
       color: #333;
       min-height: 100vh;
       background-color: rgba(0, 0, 0, 0.3);
+      font-family: sans-serif;
     }
     
     /* --- Header Styles --- */
@@ -54,24 +56,34 @@
         backdrop-filter: blur(2px);
     }
     
-    .filter-container {
+    .controls-container {
         margin-bottom: 20px;
         font-size: 1.1em;
-        width: 80%;
+        width: 90%;
         max-width: 900px;
         text-align: center;
+        display: flex;
+        justify-content: center;
+        gap: 10px;
     }
     
-    .filter-container select {
-        padding: 5px;
+    .controls-container select, .controls-container button {
+        padding: 8px 12px;
         font-size: 1em;
         background-color: rgba(255, 255, 153, 0.9);
         border: 1px solid #b2a600;
         color: #333;
         border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .controls-container button.active {
+      background-color: #FEE12B;
+      font-weight: bold;
     }
 
-    table {
+    /* --- Table Styles --- */
+    #matchTable {
       width: 80%;
       max-width: 900px;
       border-collapse: collapse;
@@ -96,19 +108,55 @@
     tbody tr:nth-child(even) {
         background-color: rgba(255, 255, 153, 0.85);
     }
+
+    /* --- Cards View Styles --- */
+    .cards-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 15px;
+        width: 100%;
+    }
+
+    .card {
+        background-color: rgba(255, 255, 0, 0.85);
+        border: 1px solid #b2a600;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        padding: 15px;
+        width: 90%;
+        max-width: 500px;
+        box-sizing: border-box;
+    }
     
-    .highlight-group td:first-child {
+    .card p {
+        margin: 0 0 10px 0;
+        font-size: 1.1em;
+    }
+    
+    .card strong {
+        color: #000;
+    }
+    
+    /* --- Highlight Styles --- */
+    .highlight-group td:first-child, .card.highlight-group {
         border-left: 2px solid red;
     }
-    .highlight-group td:last-child {
+    .highlight-group td:last-child, .card.highlight-group {
         border-right: 2px solid red;
     }
-    .highlight-start td {
+    .highlight-start td, .card.highlight-start {
         border-top: 2px solid red;
     }
-    .highlight-end td {
+    .highlight-end td, .card.highlight-end {
         border-bottom: 2px solid red;
     }
+
+    /* --- Utility Class --- */
+    .hidden {
+      display: none;
+    }
+
   </style>
 </head>
 <body>
@@ -122,14 +170,15 @@
   </header>
   
   <div class="content-wrapper">
-      <div class="filter-container">
+      <div class="controls-container">
         <select id="sportFilter">
           <option value="all">ΟΛΑ ΤΑ ΑΘΛΗΜΑΤΑ</option>
           <option value="current-week">ΤΩΡΙΝΗ ΕΒΔΟΜΑΔΑ</option>
         </select>
+        <button id="viewToggleBtn">ΠΡΟΒΟΛΗ ΚΑΡΤΩΝ</button>
       </div>
     
-      <table>
+      <table id="matchTable">
         <thead>
           <tr>
             <th>ΗΜΕΡΑ</th>
@@ -143,19 +192,26 @@
           </tr>
         </thead>
         <tbody id="matchTableBody">
-          </tbody>
+        </tbody>
       </table>
+      <div id="cardsContainer" class="cards-container hidden"></div>
   </div>
 
 
   <script>
+    const table = document.getElementById('matchTable');
     const tableBody = document.getElementById('matchTableBody');
+    const cardsContainer = document.getElementById('cardsContainer');
     const sportFilter = document.getElementById('sportFilter');
+    const viewToggleBtn = document.getElementById('viewToggleBtn');
     let allMatches = [];
 
     async function loadMatches() {
       try {
-        tableBody.innerHTML = '<tr><td colspan="8">Φόρτωση αγώνων...</td></tr>';
+        const loadingMessage = 'Φόρτωση αγώνων...';
+        tableBody.innerHTML = `<tr><td colspan="8">${loadingMessage}</td></tr>`;
+        cardsContainer.innerHTML = `<p>${loadingMessage}</p>`;
+        
         const response = await fetch("https://script.google.com/macros/s/AKfycbzmxa3UHMRSutvUFyy3nAzqnPwsUhK_InCUaB42ezH_Hz0LDQigexilJtm1u3aD4jE7ow/exec");
         const data = await response.json();
 
@@ -173,11 +229,13 @@
         });
         
         populateFilter();
-        displayMatches('all');
+        displayData(sportFilter.value);
 
       } catch (error) {
         console.error("Error loading matches:", error);
-        tableBody.innerHTML = '<tr><td colspan="8">Failed to load matches. Please try again later.</td></tr>';
+        const errorMessage = 'Failed to load matches. Please try again later.';
+        tableBody.innerHTML = `<tr><td colspan="8">${errorMessage}</td></tr>`;
+        cardsContainer.innerHTML = `<p>${errorMessage}</p>`;
       }
     }
 
@@ -195,46 +253,44 @@
         });
     }
 
-    function displayMatches(selectedOption) {
-        tableBody.innerHTML = '';
+    function displayData(selectedOption) {
+        const filteredMatches = getFilteredMatches(selectedOption);
+        displayMatchesAsTable(filteredMatches);
+        displayMatchesAsCards(filteredMatches);
+    }
+    
+    function getFilteredMatches(selectedOption) {
         const currentWeekBounds = getWeekBounds(new Date());
-        let filteredMatches = [];
 
         if (selectedOption === 'all') {
-            filteredMatches = allMatches;
+            return allMatches;
         } else if (selectedOption === 'current-week') {
-            filteredMatches = allMatches.filter(row => {
+            return allMatches.filter(row => {
                 const matchDate = parseDateTime(row.ΗΜΕΡΟΜΗΝΙΑ, row.ΩΡΑ);
                 return matchDate >= currentWeekBounds.start && matchDate <= currentWeekBounds.end;
             });
         } else {
-            filteredMatches = allMatches.filter(row => row.ΑΘΛΗΜΑ === selectedOption);
+            return allMatches.filter(row => row.ΑΘΛΗΜΑ === selectedOption);
         }
+    }
+
+    function displayMatchesAsTable(filteredMatches) {
+        tableBody.innerHTML = '';
 
         if (filteredMatches.length === 0) {
             tableBody.innerHTML = '<tr><td colspan="8">Δεν βρέθηκαν ματς για αυτή την επιλογή.</td></tr>';
             return;
         }
         
-        const weeklyMatchIndices = [];
-        filteredMatches.forEach((row, index) => {
-            const matchDate = parseDateTime(row.ΗΜΕΡΟΜΗΝΙΑ, row.ΩΡΑ);
-            if (matchDate >= currentWeekBounds.start && matchDate <= currentWeekBounds.end) {
-                weeklyMatchIndices.push(index);
-            }
-        });
+        const weeklyMatchIndices = getWeeklyMatchIndices(filteredMatches);
 
         filteredMatches.forEach((row, index) => {
           const tr = document.createElement('tr');
           
           if (weeklyMatchIndices.includes(index)) {
               tr.classList.add('highlight-group');
-              if (index === weeklyMatchIndices[0]) {
-                  tr.classList.add('highlight-start');
-              }
-              if (index === weeklyMatchIndices[weeklyMatchIndices.length - 1]) {
-                  tr.classList.add('highlight-end');
-              }
+              if (index === weeklyMatchIndices[0]) tr.classList.add('highlight-start');
+              if (index === weeklyMatchIndices[weeklyMatchIndices.length - 1]) tr.classList.add('highlight-end');
           }
 
           const columnOrder = ['ΗΜΕΡΑ', 'ΗΜΕΡΟΜΗΝΙΑ', 'ΩΡΑ', 'ΑΓΩΝΑΣ', 'ΓΗΠΕΔΟ', 'ΧΩΡΑ', 'ΑΘΛΗΜΑ', 'ΣΧΟΛΙΑ'];
@@ -251,11 +307,9 @@
                   }
               }
               
-              td.textContent = text;
-
-              if (String(text).toUpperCase().includes('ΕΚΚΡΕΜΕΙ')) {
-                  td.innerHTML = String(text).replace(/ΕΚΚΡΕΜΕΙ/gi, '<span style="color: red;">$&</span>');
-              }
+              td.innerHTML = String(text).toUpperCase().includes('ΕΚΚΡΕΜΕΙ')
+                  ? String(text).replace(/ΕΚΚΡΕΜΕΙ/gi, '<span style="color: red;">$&</span>')
+                  : text;
               
               tr.appendChild(td);
           });
@@ -264,18 +318,56 @@
         });
     }
 
+    function displayMatchesAsCards(filteredMatches) {
+        cardsContainer.innerHTML = '';
+
+        if (filteredMatches.length === 0) {
+            cardsContainer.innerHTML = '<p>Δεν βρέθηκαν ματς για αυτή την επιλογή.</p>';
+            return;
+        }
+
+        const weeklyMatchIndices = getWeeklyMatchIndices(filteredMatches);
+
+        filteredMatches.forEach((row, index) => {
+            const card = document.createElement('div');
+            card.className = 'card';
+
+            if (weeklyMatchIndices.includes(index)) {
+                card.classList.add('highlight-group');
+                if (index === weeklyMatchIndices[0]) card.classList.add('highlight-start');
+                if (index === weeklyMatchIndices[weeklyMatchIndices.length - 1]) card.classList.add('highlight-end');
+            }
+            
+            const d = parseDateTime(row['ΗΜΕΡΟΜΗΝΙΑ'], row['ΩΡΑ']);
+            const dateStr = d.toLocaleDateString('el-GR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+            let timeStr = row['ΩΡΑ'];
+            if (timeStr && String(timeStr).toUpperCase() !== 'ΕΚΚΡΕΜΕΙ') {
+                timeStr = d.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', hour12: false });
+            }
+
+            let content = `
+                <p><strong>Ημέρα:</strong> ${row.ΗΜΕΡΑ || ''}</p>
+                <p><strong>Ημερομηνία:</strong> ${dateStr}</p>
+                <p><strong>Ώρα:</strong> ${timeStr || ''}</p>
+                <p><strong>Αγώνας:</strong> ${row.ΑΓΩΝΑΣ || ''}</p>
+                <p><strong>Γήπεδο:</strong> ${row.ΓΗΠΕΔΟ || ''}</p>
+                <p><strong>Χώρα:</strong> ${row.ΧΩΡΑ || ''}</p>
+                <p><strong>Άθλημα:</strong> ${row.ΑΘΛΗΜΑ || ''}</p>
+                <p><strong>Σχόλια:</strong> ${row.ΣΧΟΛΙΑ || ''}</p>
+            `;
+            
+            card.innerHTML = content.replace(/ΕΚΚΡΕΜΕΙ/gi, '<span style="color: red;">$&</span>');
+            cardsContainer.appendChild(card);
+        });
+    }
+
     function parseDateTime(dateISO, timeISO) {
       if (!dateISO) return new Date(0);
-      
       const d = new Date(dateISO);
-      
       if (timeISO && !isNaN(new Date(timeISO).getTime())) {
         const t = new Date(timeISO);
-        d.setHours(t.getHours());
-        d.setMinutes(t.getMinutes());
-        d.setSeconds(t.getSeconds());
+        d.setHours(t.getHours(), t.getMinutes(), t.getSeconds());
       }
-      
       return d;
     }
     
@@ -293,8 +385,29 @@
         return { start: monday, end: sunday };
     }
 
+    function getWeeklyMatchIndices(matches) {
+        const currentWeekBounds = getWeekBounds(new Date());
+        const indices = [];
+        matches.forEach((row, index) => {
+            const matchDate = parseDateTime(row.ΗΜΕΡΟΜΗΝΙΑ, row.ΩΡΑ);
+            if (matchDate >= currentWeekBounds.start && matchDate <= currentWeekBounds.end) {
+                indices.push(index);
+            }
+        });
+        return indices;
+    }
+
     sportFilter.addEventListener('change', (event) => {
-        displayMatches(event.target.value);
+        displayData(event.target.value);
+    });
+    
+    viewToggleBtn.addEventListener('click', () => {
+        table.classList.toggle('hidden');
+        cardsContainer.classList.toggle('hidden');
+        
+        const isCardsView = table.classList.contains('hidden');
+        viewToggleBtn.textContent = isCardsView ? 'ΠΡΟΒΟΛΗ ΠΙΝΑΚΑ' : 'ΠΡΟΒΟΛΗ ΚΑΡΤΩΝ';
+        viewToggleBtn.classList.toggle('active', isCardsView);
     });
 
     loadMatches();
