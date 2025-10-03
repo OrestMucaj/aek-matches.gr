@@ -15,6 +15,7 @@
       color: #333;
       min-height: 100vh;
       background-color: rgba(0, 0, 0, 0.3);
+      font-family: Arial, Helvetica, "Segoe UI", "Liberation Sans", sans-serif;
     }
     
     /* --- Header Styles --- */
@@ -112,10 +113,11 @@
     }
 
     th, td {
-      border: 1px solid #b2a600;
+      border: 1px solid #e5c200;
       padding: 4px 6px;
       text-align: center;
       color: #333;
+      font-weight: bold;
     }
 
     th {
@@ -219,13 +221,23 @@
     }
     
     .card-sport {
-        background-color: rgba(255, 215, 0, 0.9);
+        background-color: #fee12b;
+        color: #222;
         padding: 4px 8px;
         border-radius: 4px;
         font-size: 0.8em;
         font-weight: bold;
         display: inline-block;
         margin-bottom: 8px;
+        border: 2px solid #b2a600;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.10);
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        transition: box-shadow 0.2s;
+    }
+    .card-sport:hover {
+        box-shadow: 0 4px 12px rgba(254,225,43,0.25);
+        background-color: #ffe95c;
     }
     
     .card-comments {
@@ -263,8 +275,8 @@
             <th>ΗΜΕΡΟΜΗΝΙΑ</th>
             <th>ΩΡΑ</th>
             <th>ΑΓΩΝΑΣ</th>
-            <th>ΓΗΠΕΔΟ</th>
-            <th>ΧΩΡΑ</th>
+            <!-- <th>ΓΗΠΕΔΟ</th> -->
+            <!-- <th>ΧΩΡΑ</th> -->
             <th>ΑΘΛΗΜΑ</th>
             <th>ΣΧΟΛΙΑ</th>
           </tr>
@@ -380,7 +392,7 @@
               }
           }
 
-          const columnOrder = ['ΗΜΕΡΑ', 'ΗΜΕΡΟΜΗΝΙΑ', 'ΩΡΑ', 'ΑΓΩΝΑΣ', 'ΓΗΠΕΔΟ', 'ΧΩΡΑ', 'ΑΘΛΗΜΑ', 'ΣΧΟΛΙΑ'];
+          const columnOrder = ['ΗΜΕΡΑ', 'ΗΜΕΡΟΜΗΝΙΑ', 'ΩΡΑ', 'ΑΓΩΝΑΣ', /*'ΓΗΠΕΔΟ', 'ΧΩΡΑ',*/ 'ΑΘΛΗΜΑ', 'ΣΧΟΛΙΑ'];
           columnOrder.forEach(column => {
               const td = document.createElement('td');
               
@@ -459,10 +471,12 @@
                 </div>
                 <div class="card-match">${row.ΑΓΩΝΑΣ || ''}</div>
                 <div class="card-sport">${row.ΑΘΛΗΜΑ || ''}</div>
+                <!--
                 <div class="card-details">
                     <div class="card-detail"><strong>Γήπεδο:</strong> ${row.ΓΗΠΕΔΟ || ''}</div>
                     <div class="card-detail"><strong>Χώρα:</strong> ${row.ΧΩΡΑ || ''}</div>
                 </div>
+                -->
                 ${row.ΣΧΟΛΙΑ ? `<div class="card-comments">${row.ΣΧΟΛΙΑ}</div>` : ''}
             `;
             
