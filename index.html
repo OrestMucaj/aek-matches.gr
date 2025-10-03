@@ -114,12 +114,19 @@
 
     th, td {
   padding: 6px 2px; /* Minimal vertical and horizontal padding */
-  font-size: 0.85em; /* Smaller font size */
+  font-size: 1.0em; /* Smaller font size */
   border: 1px solid #e5c200;
   text-align: left; /* Align text to the left */
   color: #333;
   font-weight: bold;
   white-space: nowrap;
+}
+
+th:nth-child(6), 
+td:nth-child(6) {
+  white-space: normal; /* THIS enables wrapping for the 5th column */
+  max-width: 120px; 
+  word-break: break-word; 
 }
 
 /* Make row and column borders the same size, slightly smaller than before */
@@ -332,11 +339,9 @@ td:nth-child(2) {
       }
       th, td {
         padding: 6px 2px;
-        font-size: 0.95em;
       }
       .match-card {
         padding: 10px;
-        font-size: 0.95em;
       }
     }
   </style>
