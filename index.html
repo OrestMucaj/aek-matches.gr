@@ -122,10 +122,10 @@
   white-space: nowrap;
 }
 
-/* Stronger column borders for table */
+/* Make row and column borders the same size, slightly smaller than before */
 th, td {
-  border-right: 3px solid #e5c200; /* Strong yellow border between columns */
-  border-bottom: 1px solid #e5c200;
+  border-right: 3px solid #e5c200; /* Column border */
+  border-bottom: 3px solid #e5c200; /* Row border */
 }
 
 /* Remove right border from last column */
@@ -157,16 +157,16 @@ tbody tr:hover {
     }
     
     .highlight-group td:first-child {
-        border-left: 2px solid red;
+        border-left: 4px solid red;
     }
     .highlight-group td:last-child {
-        border-right: 2px solid red;
+        border-right: 4px solid red;
     }
     .highlight-start td {
-        border-top: 2px solid red;
+    border-top: 4px solid red; 
     }
     .highlight-end td {
-        border-bottom: 2px solid red;
+        border-bottom: 4px solid red;
     }
     
     /* --- Card View Styles --- */
