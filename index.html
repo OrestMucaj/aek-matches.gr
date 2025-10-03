@@ -445,80 +445,105 @@ td:nth-child(2) {
     }
 
     function displayTableView(selectedOption) {
-        tableBody.innerHTML = '';
-        const currentWeekBounds = getWeekBounds(new Date());
-        let filteredMatches = [];
+    tableBody.innerHTML = '';
+    const currentWeekBounds = getWeekBounds(new Date());
+    let filteredMatches = [];
 
-        if (selectedOption === 'all') {
-            filteredMatches = allMatches;
-        } else if (selectedOption === 'current-week') {
-            filteredMatches = allMatches.filter(row => {
-                const matchDate = parseDateTime(row.ΗΜΕΡΟΜΗΝΙΑ, row.ΩΡΑ);
-                return matchDate >= currentWeekBounds.start && matchDate <= currentWeekBounds.end;
-            });
-        } else {
-            filteredMatches = allMatches.filter(row => row.ΑΘΛΗΜΑ === selectedOption);
-        }
-
-        if (filteredMatches.length === 0) {
-            tableBody.innerHTML = '<tr><td colspan="8" style="padding: 20px; color: #333; font-weight: bold; background-color: rgba(255, 255, 0, 0.85); border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); border: 1px solid #b2a600;">Δεν βρέθηκαν ματς για αυτή την επιλογή.</td></tr>';
-            return;
-        }
-        
-        const weeklyMatchIndices = [];
-        filteredMatches.forEach((row, index) => {
+    if (selectedOption === 'all') {
+        filteredMatches = allMatches;
+    } else if (selectedOption === 'current-week') {
+        filteredMatches = allMatches.filter(row => {
             const matchDate = parseDateTime(row.ΗΜΕΡΟΜΗΝΙΑ, row.ΩΡΑ);
-            if (matchDate >= currentWeekBounds.start && matchDate <= currentWeekBounds.end) {
-                weeklyMatchIndices.push(index);
-            }
+            return matchDate >= currentWeekBounds.start && matchDate <= currentWeekBounds.end;
         });
-
-        filteredMatches.forEach((row, index) => {
-          const tr = document.createElement('tr');
-          
-          if (weeklyMatchIndices.includes(index)) {
-              tr.classList.add('highlight-group');
-              if (index === weeklyMatchIndices[0]) {
-                  tr.classList.add('highlight-start');
-              }
-              if (index === weeklyMatchIndices[weeklyMatchIndices.length - 1]) {
-                  tr.classList.add('highlight-end');
-              }
-          }
-
-          const columnOrder = ['ΗΜΕΡΑ', 'ΗΜΕΡΟΜΗΝΙΑ', 'ΩΡΑ', 'ΑΓΩΝΑΣ', /*'ΓΗΠΕΔΟ', 'ΧΩΡΑ',*/ 'ΑΘΛΗΜΑ', 'ΣΧΟΛΙΑ'];
-          columnOrder.forEach(column => {
-              const td = document.createElement('td');
-              
-              let text = row[column] || '';
-              if ((column === 'ΗΜΕΡΟΜΗΝΙΑ' || column === 'ΩΡΑ') && row['ΗΜΕΡΟΜΗΝΙΑ']) {
-                  const d = parseDateTime(row['ΗΜΕΡΟΜΗΝΙΑ'], row['ΩΡΑ']);
-                  if(column === 'ΗΜΕΡΟΜΗΝΙΑ') {
-                      text = d.toLocaleDateString('el-GR', { day: '2-digit', month: '2-digit', year: '2-digit' });
-                  } else if (column === 'ΩΡΑ') {
-                      if (row['ΩΡΑ'] && String(row['ΩΡΑ']).toUpperCase() !== 'ΕΚΚΡΕΜΕΙ') {
-                          const d = parseDateTime(row['ΗΜΕΡΟΜΗΝΙΑ'], row['ΩΡΑ']);
-                          text = d.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', hour12: false });
-                      } else {
-                          text = ''; // Leave blank if no time input
-                      }
-                  }
-              }
-              
-              td.textContent = text;
-
-              if (String(text).toUpperCase().includes('ΕΚΚΡΕΜΕΙ')) {
-                  td.innerHTML = String(text).replace(/ΕΚΚΡΕΜΕΙ/gi, '<span style="color: red;">$&</span>');
-              }
-              
-              tr.appendChild(td);
-          });
-          
-          tableBody.appendChild(tr);
-        });
+    } else {
+        filteredMatches = allMatches.filter(row => row.ΑΘΛΗΜΑ === selectedOption);
     }
 
-    function displayCardView(selectedOption) {
+    if (filteredMatches.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="8" style="padding: 20px; color: #333; font-weight: bold; background-color: rgba(255, 255, 0, 0.85); border-radius: 8px; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); border: 1px solid #b2a600;">Δεν βρέθηκαν ματς για αυτή την επιλογή.</td></tr>';
+        return;
+    }
+    
+    const weeklyMatchIndices = [];
+    filteredMatches.forEach((row, index) => {
+        const matchDate = parseDateTime(row.ΗΜΕΡΟΜΗΝΙΑ, row.ΩΡΑ);
+        if (matchDate >= currentWeekBounds.start && matchDate <= currentWeekBounds.end) {
+            weeklyMatchIndices.push(index);
+        }
+    });
+
+    filteredMatches.forEach((row, index) => {
+        const tr = document.createElement('tr');
+        
+        if (weeklyMatchIndices.includes(index)) {
+            tr.classList.add('highlight-group');
+            if (index === weeklyMatchIndices[0]) {
+                tr.classList.add('highlight-start');
+            }
+            if (index === weeklyMatchIndices[weeklyMatchIndices.length - 1]) {
+                tr.classList.add('highlight-end');
+            }
+        }
+
+        const columnOrder = ['ΗΜΕΡΑ', 'ΗΜΕΡΟΜΗΝΙΑ', 'ΩΡΑ', 'ΑΓΩΝΑΣ', /*'ΓΗΠΕΔΟ', 'ΧΩΡΑ',*/ 'ΑΘΛΗΜΑ', 'ΣΧΟΛΙΑ'];
+        columnOrder.forEach(column => {
+            const td = document.createElement('td');
+            let content = row[column] || '';
+            let isHtml = false;
+
+            // Format Dates and Times
+            if ((column === 'ΗΜΕΡΟΜΗΝΙΑ' || column === 'ΩΡΑ') && row['ΗΜΕΡΟΜΗΝΙΑ']) {
+                const d = parseDateTime(row['ΗΜΕΡΟΜΗΝΙΑ'], row['ΩΡΑ']);
+                if (column === 'ΗΜΕΡΟΜΗΝΙΑ') {
+                    content = d.toLocaleDateString('el-GR', { day: '2-digit', month: '2-digit', year: '2-digit' });
+                } else if (column === 'ΩΡΑ') {
+                    if (row['ΩΡΑ'] && String(row['ΩΡΑ']).toUpperCase() !== 'ΕΚΚΡΕΜΕΙ') {
+                        content = d.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', hour12: false });
+                    } else {
+                        content = '';
+                    }
+                }
+            }
+            
+            // Format the Match string
+            if (column === 'ΑΓΩΝΑΣ' && typeof content === 'string' && content.includes(' - ')) {
+                content = content.replace(' - ', '<br>');
+                isHtml = true;
+            }
+
+            // NEW: Format the Sport string to move gender to a new line
+            if (column === 'ΑΘΛΗΜΑ' && typeof content === 'string') {
+                if (content.endsWith('ΑΝΔΡΩΝ') && content !== 'ΑΝΔΡΩΝ') {
+                    content = content.replace(' ΑΝΔΡΩΝ', '<br>ΑΝΔΡΩΝ');
+                    isHtml = true;
+                } else if (content.endsWith('ΓΥΝΑΙΚΩΝ') && content !== 'ΓΥΝΑΙΚΩΝ') {
+                    content = content.replace(' ΓΥΝΑΙΚΩΝ', '<br>ΓΥΝΑΙΚΩΝ');
+                    isHtml = true;
+                }
+            }
+
+            // Highlight 'ΕΚΚΡΕΜΕΙ'
+            if (String(content).toUpperCase().includes('ΕΚΚΡΕΜΕΙ')) {
+                content = String(content).replace(/ΕΚΚΡΕΜΕΙ/gi, '<span style="color: red;">$&</span>');
+                isHtml = true;
+            }
+
+            // Apply the final content to the cell
+            if (isHtml) {
+                td.innerHTML = content;
+            } else {
+                td.textContent = content;
+            }
+            
+            tr.appendChild(td);
+        });
+        
+        tableBody.appendChild(tr);
+    });
+}
+
+      function displayCardView(selectedOption) {
         cardsContainer.innerHTML = '';
         const currentWeekBounds = getWeekBounds(new Date());
         let filteredMatches = [];
