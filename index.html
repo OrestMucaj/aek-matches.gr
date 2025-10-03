@@ -113,12 +113,14 @@
     }
 
     th, td {
-      border: 1px solid #e5c200;
-      padding: 4px 6px;
-      text-align: center;
-      color: #333;
-      font-weight: bold;
-    }
+  padding: 1px 2px; /* Minimal vertical and horizontal padding */
+  font-size: 0.85em; /* Smaller font size */
+  border: 1px solid #e5c200;
+  text-align: center;
+  color: #333;
+  font-weight: bold;
+  white-space: nowrap;
+}
 
     th {
       background: rgba(255, 215, 0, 0.9);
@@ -284,7 +286,27 @@
     table,
     .cards-container {
       width: 100%;
-      max-width: 900px;
+      max-width: 100vw;
+    }
+
+    /* Prevent horizontal scroll by wrapping text */
+    th, td {
+      word-break: break-word;
+    }
+
+    /* Responsive adjustments for phones */
+    @media (max-width: 600px) {
+      .content-wrapper {
+        padding: 10px 2px 2px 2px;
+      }
+      th, td {
+        padding: 6px 2px;
+        font-size: 0.95em;
+      }
+      .match-card {
+        padding: 10px;
+        font-size: 0.95em;
+      }
     }
   </style>
 </head>
