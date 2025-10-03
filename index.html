@@ -116,16 +116,41 @@
   padding: 1px 2px; /* Minimal vertical and horizontal padding */
   font-size: 0.85em; /* Smaller font size */
   border: 1px solid #e5c200;
-  text-align: center;
+  text-align: left; /* Align text to the left */
   color: #333;
   font-weight: bold;
   white-space: nowrap;
+}
+
+/* Stronger column borders for table */
+th, td {
+  border-right: 3px solid #e5c200; /* Strong yellow border between columns */
+  border-bottom: 1px solid #e5c200;
+}
+
+/* Remove right border from last column */
+th:last-child, td:last-child {
+  border-right: none;
 }
 
     th {
       background: rgba(255, 215, 0, 0.9);
       font-weight: bold;
     }
+
+    /* Zebra striping for rows - strong yellow shades */
+tbody tr:nth-child(even) {
+  background-color: rgba(255, 255, 153, 0.85); /* medium yellow */
+}
+tbody tr:nth-child(odd) {
+  background-color: rgba(255, 255, 0, 0.85); /* bright yellow */
+}
+
+/* Remove row hover effect */
+tbody tr:hover {
+  /* background-color: #ffe95c;
+  transition: background-color 0.2s; */
+}
 
     tbody tr:nth-child(even) {
         background-color: rgba(255, 255, 153, 0.85);
@@ -294,7 +319,13 @@
       word-break: break-word;
     }
 
-    /* Responsive adjustments for phones */
+    /* Center-align ΗΜΕΡΟΜΗΝΙΑ column */
+th:nth-child(2),
+td:nth-child(2) {
+  text-align: center;
+}
+
+/* Responsive adjustments for phones */
     @media (max-width: 600px) {
       .content-wrapper {
         padding: 10px 2px 2px 2px;
@@ -365,7 +396,7 @@
 
     async function loadMatches() {
       try {
-        tableBody.innerHTML = '<tr><td colspan="8">Φόρτωση αγώνων...</td></tr>';
+        tableBody.innerHTML = '<tr><td colspan="8" style="text-align:center;">Φόρτωση αγώνων...</td></tr>';
         const response = await fetch("https://script.google.com/macros/s/AKfycbzmxa3UHMRSutvUFyy3nAzqnPwsUhK_InCUaB42ezH_Hz0LDQigexilJtm1u3aD4jE7ow/exec");
         const data = await response.json();
 
@@ -464,8 +495,13 @@
                   const d = parseDateTime(row['ΗΜΕΡΟΜΗΝΙΑ'], row['ΩΡΑ']);
                   if(column === 'ΗΜΕΡΟΜΗΝΙΑ') {
                       text = d.toLocaleDateString('el-GR', { day: '2-digit', month: '2-digit', year: '2-digit' });
-                  } else if (column === 'ΩΡΑ' && String(row['ΩΡΑ']).toUpperCase() !== 'ΕΚΚΡΕΜΕΙ') {
-                      text = d.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', hour12: false });
+                  } else if (column === 'ΩΡΑ') {
+                      if (row['ΩΡΑ'] && String(row['ΩΡΑ']).toUpperCase() !== 'ΕΚΚΡΕΜΕΙ') {
+                          const d = parseDateTime(row['ΗΜΕΡΟΜΗΝΙΑ'], row['ΩΡΑ']);
+                          text = d.toLocaleTimeString('el-GR', { hour: '2-digit', minute: '2-digit', hour12: false });
+                      } else {
+                          text = ''; // Leave blank if no time input
+                      }
                   }
               }
               
