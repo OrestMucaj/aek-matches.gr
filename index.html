@@ -245,6 +245,47 @@
         color: #666;
         font-style: italic;
     }
+
+    .scrollable-matches {
+      width: 100%;
+      max-width: 900px;
+      height: 70vh; /* Adjust as needed */
+      overflow-y: auto;
+      overflow-x: hidden; /* Prevent horizontal scroll */
+      margin-bottom: 20px;
+      background: transparent;
+      border-radius: 8px;
+      /* Optional: add a subtle shadow */
+      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+    }
+
+    /* Custom vertical scrollbar for scrollable-matches */
+.scrollable-matches::-webkit-scrollbar {
+  width: 12px;
+}
+
+.scrollable-matches::-webkit-scrollbar-thumb {
+  background: #fee12b; /* yellow thumb */
+  border-radius: 8px;
+  border: 2px solid #000; /* black border */
+}
+
+.scrollable-matches::-webkit-scrollbar-track {
+  background: #000; /* black track */
+  border-radius: 8px;
+}
+
+/* For Firefox */
+.scrollable-matches {
+  scrollbar-color: #fee12b #000; /* thumb color, track color */
+  scrollbar-width: thin;
+}
+    /* Make table and cards fill the container */
+    table,
+    .cards-container {
+      width: 100%;
+      max-width: 900px;
+    }
   </style>
 </head>
 <body>
@@ -268,24 +309,24 @@
 
       </div>
     
-      <table class="active">
-        <thead>
-          <tr>
-            <th>ΗΜΕΡΑ</th>
-            <th>ΗΜΕΡΟΜΗΝΙΑ</th>
-            <th>ΩΡΑ</th>
-            <th>ΑΓΩΝΑΣ</th>
-            <!-- <th>ΓΗΠΕΔΟ</th> -->
-            <!-- <th>ΧΩΡΑ</th> -->
-            <th>ΑΘΛΗΜΑ</th>
-            <th>ΣΧΟΛΙΑ</th>
-          </tr>
-        </thead>
-        <tbody id="matchTableBody">
-          </tbody>
-      </table>
-      
-      <div class="cards-container" id="cardsContainer">
+      <div class="scrollable-matches">
+        <table class="active">
+          <thead>
+            <tr>
+              <th>ΗΜΕΡΑ</th>
+              <th>ΗΜΕΡΟΜΗΝΙΑ</th>
+              <th>ΩΡΑ</th>
+              <th>ΑΓΩΝΑΣ</th>
+              <!-- <th>ΓΗΠΕΔΟ</th> -->
+              <!-- <th>ΧΩΡΑ</th> -->
+              <th>ΑΘΛΗΜΑ</th>
+              <th>ΣΧΟΛΙΑ</th>
+            </tr>
+          </thead>
+          <tbody id="matchTableBody">
+            </tbody>
+        </table>
+        <div class="cards-container" id="cardsContainer"></div>
       </div>
   </div>
 
